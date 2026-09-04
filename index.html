@@ -71,7 +71,13 @@
 <body>
   <div id="loading">Cargando diagrama…</div>
   <div id="stage">
-    <div id="diagram" class="mermaid">
+    <div id="diagram"></div>
+    <!-- La fuente del diagrama va en un <script type="text/plain"> y no en un
+         <div>. Dentro de un div el navegador convierte cada <br/> en un nodo
+         DOM real, y leerlo con textContent los descarta y pega las palabras
+         ("Entrega al" + "repositorio" -> "Entrega alrepositorio"). Aqui el
+         contenido es texto crudo y los saltos de linea llegan intactos. -->
+    <script id="diagram-src" type="text/plain">
 flowchart TD
     T["Ticket recibido<br/>codigo, URL/fuente,<br/>formato esperado"] --> RF
 
@@ -120,7 +126,7 @@ flowchart TD
     style ACTOR_TESTS fill:#E0F2FE,stroke:#028090
     style ACTOR_RUNTIME fill:#F3F4F6,stroke:#6B7280
     style ACTOR_AIRFLOW fill:#EDE9FE,stroke:#1E2761
-    </div>
+    </script>
   </div>
   <div id="hint">Rueda / pellizco: zoom · Arrastrar: mover</div>
 
@@ -138,25 +144,22 @@ flowchart TD
         fontFamily: "Arial, sans-serif",
         fontSize: "16px"
       },
-      // htmlLabels:false es importante. Con etiquetas HTML mermaid mete
-      // <foreignObject> y no emite viewBox; en movil getBBox() sobre
-      // foreignObject devuelve medidas poco fiables, el encuadre salia
-      // minusculo y solo se veian los botones de zoom ampliados. Con texto SVG
-      // nativo mermaid si genera un viewBox correcto.
-      flowchart: { htmlLabels: false, curve: "basis" }
+      // htmlLabels debe quedarse en true: con false mermaid descarta los <br/>
+      // y pega todas las lineas en una sola ("Entrega alrepositorio analitico").
+      flowchart: { htmlLabels: true, curve: "basis" }
     });
 
     let panZoomInstance = null;
 
     async function render() {
       const el = document.getElementById("diagram");
-      const code = el.textContent;
+      const code = document.getElementById("diagram-src").textContent;
       const { svg } = await mermaid.render("mermaidSvg", code);
       el.innerHTML = svg;
       document.getElementById("loading").style.display = "none";
 
       const svgEl = el.querySelector("svg");
-      // Con htmlLabels:false mermaid ya deja un viewBox correcto. NO lo tocamos:
+      // Mermaid ya deja un viewBox correcto. NO lo tocamos ni lo recalculamos:
       // es lo unico que hace falta para que el diagrama se ajuste solo a
       // cualquier pantalla. Solo quitamos el tamano fijo para que ocupe el area.
       svgEl.removeAttribute("width");
