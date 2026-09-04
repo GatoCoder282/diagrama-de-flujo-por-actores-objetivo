@@ -183,30 +183,41 @@ flowchart TD
         mouseWheelZoomEnabled: true,
         preventMouseEventsDefault: true,
         fit: true,
+        contain: false,
         center: true,
-        minZoom: 0.3,
-        maxZoom: 12,
-        zoomScaleSensitivity: 0.35
+        minZoom: 0.2,
+        maxZoom: 8,
+        zoomScaleSensitivity: 0.2
       });
 
-      // En movil, arranca un poco mas alejado para ver el diagrama completo
-      if (window.matchMedia("(max-width: 640px)").matches) {
-        panZoomInstance.zoom(panZoomInstance.getZoom() * 0.9);
-        panZoomInstance.center();
-      }
+      // Encuadra el diagrama completo dentro de la pantalla actual.
+      // Ojo: zoom() es absoluto en svg-pan-zoom; para alejar hay que usar
+      // zoomBy(), que si es relativo al encuadre actual.
+      fitToScreen();
+    }
+
+    function fitToScreen() {
+      if (!panZoomInstance) return;
+      panZoomInstance.resize();
+      panZoomInstance.fit();
+      panZoomInstance.center();
+      // Un pequeno margen para que el diagrama no toque los bordes
+      panZoomInstance.zoomBy(0.92);
     }
 
     // Recalcula tamano/posicion al girar el celular o cambiar el viewport
+    // Solo reencuadra si cambia el ancho real: en movil la barra de URL
+    // dispara "resize" al hacer scroll y no queremos perder el zoom del usuario.
     let resizeTimer;
+    let lastWidth = window.innerWidth;
     window.addEventListener("resize", () => {
+      if (window.innerWidth === lastWidth) return;
+      lastWidth = window.innerWidth;
       clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => {
-        if (panZoomInstance) {
-          panZoomInstance.resize();
-          panZoomInstance.fit();
-          panZoomInstance.center();
-        }
-      }, 150);
+      resizeTimer = setTimeout(fitToScreen, 150);
+    });
+    window.addEventListener("orientationchange", () => {
+      setTimeout(fitToScreen, 300);
     });
 
     render();
