@@ -38,7 +38,7 @@
   }
   #hint {
     position: fixed;
-    bottom: 14px;
+    bottom: calc(14px + env(safe-area-inset-bottom, 0px));
     left: 50%;
     transform: translateX(-50%);
     font-size: 12px;
@@ -46,6 +46,22 @@
     letter-spacing: 0.02em;
     user-select: none;
     pointer-events: none;
+    max-width: 92vw;
+    text-align: center;
+  }
+
+  /* En pantallas tactiles los controles de zoom son diminutos: los agrandamos.
+     El gesto de pellizcar lo maneja svg-pan-zoom sobre el propio SVG. */
+  @media (pointer: coarse) {
+    #hint { font-size: 11px; }
+    .svg-pan-zoom-control {
+      transform: scale(1.6);
+      transform-origin: right bottom;
+    }
+  }
+
+  @media (orientation: landscape) and (max-height: 450px) {
+    #hint { display: none; }
   }
   #loading {
     position: fixed;
@@ -131,6 +147,9 @@ flowchart TD
       flowchart: { htmlLabels: true, curve: "basis" }
     });
 
+    let panZoomInstance = null;
+    let viewBox = null;
+
     async function render() {
       const el = document.getElementById("diagram");
       const code = el.textContent;
@@ -143,7 +162,25 @@ flowchart TD
       svgEl.removeAttribute("height");
       svgEl.style.maxWidth = "none";
 
-      svgPanZoom(svgEl, {
+      // Mermaid no deja un viewBox en el SVG. Sin viewBox el dibujo usa
+      // coordenadas nativas (~1966x962) aunque el elemento mida el ancho de
+      // la pantalla, asi que en un celular solo se ve una esquina del
+      // diagrama. Lo calculamos desde el contenido real, antes de montar el
+      // pan/zoom (despues, el <g> ya lleva el transform de svg-pan-zoom y la
+      // medida sale mal).
+      const box = svgEl.getBBox();
+      const pad = 16;
+      viewBox = [box.x - pad, box.y - pad, box.width + pad * 2, box.height + pad * 2].join(" ");
+      svgEl.setAttribute("preserveAspectRatio", "xMidYMid meet");
+
+      mountPanZoom(svgEl);
+    }
+
+    // svg-pan-zoom consume el viewBox al iniciar (lo pasa a un transform y lo
+    // borra), asi que lo reponemos en cada montaje.
+    function mountPanZoom(svgEl) {
+      svgEl.setAttribute("viewBox", viewBox);
+      panZoomInstance = svgPanZoom(svgEl, {
         zoomEnabled: true,
         panEnabled: true,
         controlIconsEnabled: true,
@@ -153,6 +190,27 @@ flowchart TD
         maxZoom: 10
       });
     }
+
+    // Al girar el celular o cambiar el ancho hay que reencuadrar. resize()+fit()
+    // no basta: sin atributos width/height en el SVG, svg-pan-zoom conserva el
+    // tamano viejo y el diagrama queda cortado. Destruir y volver a montar si
+    // recalcula bien el encuadre.
+    // Solo reaccionamos al ancho real: en movil la barra de URL dispara "resize"
+    // al hacer scroll y no queremos perder el zoom del usuario.
+    let resizeTimer;
+    let lastWidth = window.innerWidth;
+    window.addEventListener("resize", () => {
+      if (window.innerWidth === lastWidth) return;
+      lastWidth = window.innerWidth;
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        const svgEl = document.querySelector("#diagram svg");
+        if (!panZoomInstance || !svgEl) return;
+        panZoomInstance.destroy();
+        mountPanZoom(svgEl);
+      }, 200);
+    });
+
     render();
   </script>
 </body>
