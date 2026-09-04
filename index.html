@@ -73,30 +73,30 @@
   <div id="stage">
     <div id="diagram" class="mermaid">
 flowchart TD
-    T["Ticket recibido<br/>codigo, URL/fuente, formato esperado"] --> RF
+    T["Ticket recibido<br/>codigo, URL/fuente,<br/>formato esperado"] --> RF
 
     subgraph ACTOR_TICKET["Sistema de tickets"]
         T
     end
 
-    subgraph ACTOR_AGENTE["Agente autonomo basado en modelos de lenguaje"]
-        RF["Modulo de reconocimiento de fuente<br/>navegacion asistida, obtiene el archivo,<br/>registra especificacion reutilizable"]
-        VV["Modulo de verificacion de vigencia<br/>contrasta resultado del robot instalado<br/>contra la fuente publicada"]
-        GR["Modulo generador y reparador de codigo<br/>produce o corrige el robot de descarga<br/>a partir de la especificacion y el diagnostico"]
-        CE["Modulo de clasificacion estructural<br/>determina categoria del archivo,<br/>selecciona estrategia de aplanamiento"]
-        ES["Modulo de estructuracion<br/>transforma al esquema de destino,<br/>valida contrato de estructura y tipos"]
-        MT["Instrumento de medicion de tokens<br/>por fuente y por ejecucion periodica"]
+    subgraph ACTOR_AGENTE["Agente autonomo basado<br/>en modelos de lenguaje"]
+        RF["Modulo de reconocimiento<br/>de fuente<br/>navegacion asistida,<br/>obtiene el archivo,<br/>registra especificacion<br/>reutilizable"]
+        VV["Modulo de verificacion<br/>de vigencia<br/>contrasta el resultado<br/>del robot instalado<br/>contra la fuente publicada"]
+        GR["Modulo generador y<br/>reparador de codigo<br/>produce o corrige el<br/>robot de descarga<br/>desde la especificacion<br/>y el diagnostico"]
+        CE["Modulo de clasificacion<br/>estructural<br/>determina la categoria<br/>del archivo y la estrategia<br/>de aplanamiento"]
+        ES["Modulo de estructuracion<br/>transforma al esquema<br/>de destino, valida<br/>estructura y tipos"]
+        MT["Instrumento de medicion<br/>de tokens<br/>por fuente y por<br/>ejecucion periodica"]
 
         RF --> VV
-        VV -->|resultado no corresponde o falla| GR
+        VV -->|no corresponde<br/>o falla| GR
         GR --> RF
-        VV -->|resultado valido| CE
+        VV -->|resultado<br/>valido| CE
         CE --> ES
         ES --> MT
     end
 
-    subgraph ACTOR_TESTS["Suite de pruebas automatizadas<br/>(contrato vigente, sin cambios)"]
-        P["Pruebas de forma y tipos"]
+    subgraph ACTOR_TESTS["Suite de pruebas<br/>automatizadas<br/>(contrato vigente)"]
+        P["Pruebas de<br/>forma y tipos"]
         GR --> P
         P -->|falla| GR
         P -->|aprueba| RF
@@ -105,15 +105,15 @@ flowchart TD
     subgraph ACTOR_RUNTIME["Motor de ejecucion"]
         X1["run_download.py"]
         X2["run_conversion.py"]
-        RF -->|robot vigente| X1
+        RF -->|robot<br/>vigente| X1
         ES --> X2
         X1 --> AF
     end
 
     subgraph ACTOR_AIRFLOW["Apache Airflow<br/>(sin cambios)"]
-        AF["Orquestacion periodica<br/>idempotencia - sin estado - XCom acotado"]
+        AF["Orquestacion periodica<br/>idempotencia<br/>sin estado<br/>XCom acotado"]
         X2 --> AF
-        AF --> FIN["Entrega al repositorio analitico"]
+        AF --> FIN["Entrega al<br/>repositorio analitico"]
     end
 
     style ACTOR_AGENTE fill:#DCFCE7,stroke:#028090,stroke-width:2px
