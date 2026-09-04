@@ -85,7 +85,7 @@ flowchart TD
         T
     end
 
-    subgraph ACTOR_AGENTE["Agente autonomo basado<br/>en modelos de lenguaje"]
+    subgraph ACTOR_AGENTE["Agente autonomo basado en modelos de lenguaje"]
         RF["Modulo de reconocimiento<br/>de fuente<br/>navegacion asistida,<br/>obtiene el archivo,<br/>registra especificacion<br/>reutilizable"]
         VV["Modulo de verificacion<br/>de vigencia<br/>contrasta el resultado<br/>del robot instalado<br/>contra la fuente publicada"]
         GR["Modulo generador y<br/>reparador de codigo<br/>produce o corrige el<br/>robot de descarga<br/>desde la especificacion<br/>y el diagnostico"]
@@ -101,7 +101,7 @@ flowchart TD
         ES --> MT
     end
 
-    subgraph ACTOR_TESTS["Suite de pruebas<br/>automatizadas<br/>(contrato vigente)"]
+    subgraph ACTOR_TESTS["Suite de pruebas automatizadas (contrato vigente)"]
         P["Pruebas de<br/>forma y tipos"]
         GR --> P
         P -->|falla| GR
@@ -116,7 +116,7 @@ flowchart TD
         X1 --> AF
     end
 
-    subgraph ACTOR_AIRFLOW["Apache Airflow<br/>(sin cambios)"]
+    subgraph ACTOR_AIRFLOW["Apache Airflow (sin cambios)"]
         AF["Orquestacion periodica<br/>idempotencia<br/>sin estado<br/>XCom acotado"]
         X2 --> AF
         AF --> FIN["Entrega al<br/>repositorio analitico"]
